@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  sqledge:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+      - SA_PASSWORD=password
+    volumes:
+      - ./data:/var/opt/mssql/data
