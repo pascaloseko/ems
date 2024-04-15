@@ -44,7 +44,6 @@ input Login {
 }
 
 type Mutation {
-  createEmployee(input: NewEmployee!): Employee!
-  login(input: Login!): String!
+  createEmployee(input: NewEmployee!): String
   refreshToken(input: RefreshTokenInput!): String!
 }

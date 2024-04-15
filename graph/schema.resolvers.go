@@ -7,28 +7,81 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/pascaloseko/ems/graph/model"
+	"github.com/pascaloseko/ems/internal/auth"
+	"github.com/pascaloseko/ems/internal/employees"
+	"github.com/pascaloseko/ems/internal/pkg/jwt"
 )
 
 // CreateEmployee is the resolver for the createEmployee field.
-func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEmployee) (*model.Employee, error) {
-	panic(fmt.Errorf("not implemented: CreateEmployee - createEmployee"))
-}
+func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEmployee) (*string, error) {
+	var token = ""
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("access denied")
+	}
 
-// Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input model.Login) (string, error) {
-	panic(fmt.Errorf("not implemented: Login - login"))
+	var employee employees.Employee
+	employee.FirstName = input.FirstName
+	employee.LastName = input.LastName
+	employee.Username = input.Username
+	employee.Email = input.Email
+	employee.DOB = input.Dob
+	employee.Password = input.Password
+	employee.Position = input.Position
+
+	_, err := employee.Save()
+	if err != nil {
+		return nil, fmt.Errorf("failed to save employee: %w", err)
+	}
+
+	correct := user.Authenticate()
+	if !correct {
+		return &token, &employees.WrongUsernameOrPasswordError{}
+	}
+	token, err = jwt.GenerateToken(user.Username)
+	if err != nil {
+		return &token, err
+	}
+	return &token, nil
 }
 
 // RefreshToken is the resolver for the refreshToken field.
 func (r *mutationResolver) RefreshToken(ctx context.Context, input model.RefreshTokenInput) (string, error) {
-	panic(fmt.Errorf("not implemented: RefreshToken - refreshToken"))
+	username, err := jwt.ParseToken(input.Token)
+	if err != nil {
+		return "", fmt.Errorf("access denied")
+	}
+	token, err := jwt.GenerateToken(username)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 // Employees is the resolver for the employees field.
 func (r *queryResolver) Employees(ctx context.Context) ([]*model.Employee, error) {
-	panic(fmt.Errorf("not implemented: Employees - employees"))
+	var resultEmployees []*model.Employee
+	employees, err := employees.GetAllEmployees()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get employees: %w", err)
+	}
+	for _, employee := range employees {
+
+		resultEmployees = append(resultEmployees, &model.Employee{
+			ID:        strconv.Itoa(int(employee.ID)),
+			FirstName: employee.FirstName,
+			LastName:  employee.LastName,
+			Username:  employee.Username,
+			Email:     employee.Email,
+			Dob:       employee.DOB,
+			Password:  employee.Password,
+			Position:  employee.Position,
+		})
+	}
+	return resultEmployees, nil
 }
 
 // Mutation returns MutationResolver implementation.
