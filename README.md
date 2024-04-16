@@ -29,3 +29,50 @@
 [ ] Docker Compose file for setting up necessary services.
 
 [ ] Any scripts required to set up the database.
+
+## How to run the APP
+ # Step 1:
+    - run the sql database
+    ```
+    docker-compose up -d
+    ```
+
+# Step 2
+    - run the app
+    ```
+    go run server.go
+    ```
+
+# Database Layer
+- The database is bootstrapped from internal/pkg/db/database/mssql.go by InitDB function
+- there is a connection string and I used gorm to make migrations automatically
+
+
+# API Layer
+- So my approach was to first initialize the graphql this will generate the relevant folders(see graph folder)
+- then I created the docker compose containing the azure sql server and was able to run it(apply it on step one)
+- I proceeded changing the data in schema.resolvers.go contents to match with the requirements
+- the above helped me now design the API which included a middleware that checks a logged in user is authenticated.
+- the login endpoint is located in the internal/handlers/handlers.go, it gets the data coming from the client and pass it down to the mutation resolver to create a user. if there are any errors they will be returned with the relevant status code and message.
+- the employees handlers is also situated in the above package where it returns a list of employees from the database. The endpoint is protected in the server.go file line 43.
+- if non authorized a status code of 401/403 will be thrown from the middleware in internal/auth/middleware.go
+
+# Problems
+- There is an underlying issue when testin the app using postman/curl
+
+```
+curl --location 'http://localhost:8080/login' \
+--header 'Content-Type: application/json' \
+--data '{
+    "username": "test",
+    "password": "test"
+}'
+```
+
+the above throws a 500 with the below log
+```
+2024/04/16 15:23:06 ERROR failed to save employee: sql: database is close
+``` 
+
+not sure why the database keeps getting closed
+
