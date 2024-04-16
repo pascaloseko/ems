@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -17,9 +18,14 @@ var (
 // GenerateToken generates a jwt token and assign a username to it's claims and return it
 func GenerateToken(username string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
-	/* Create a map to store our claims */
+	// Create a map to store our claims
 	claims := token.Claims.(jwt.MapClaims)
-	/* Set token claims */
+
+	// check if username is empty
+	if username == "" {
+		return "", errors.New("'username' cannot be empty")
+	}
+	// Set token claims
 	claims["username"] = username
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 	tokenString, err := token.SignedString(SecretKey)
