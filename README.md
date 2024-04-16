@@ -105,7 +105,7 @@ not sure why the database keeps getting closed
 - There are still alot to be done like testing the API and data layers to make sure they are working as expected.
 
 
-- Also the issue of the datbase getting closed when doing API operations needs to be resolved.
+- Also the issue of the datbase getting closed when doing API operations needs to be resolved. [Update this is resolved]
 
 - Also I couldn't get the app running on docker, due to a connection problem with the mssql database
 
