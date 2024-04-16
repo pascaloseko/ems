@@ -94,7 +94,7 @@ curl --location 'http://localhost:8080/login' \
 
 the above throws a 500 with the below log
 ```
-2024/04/16 15:23:06 ERROR failed to save employee: sql: database is close
+2024/04/16 15:23:06 ERROR failed to save employee: sql: database is closed
 ``` 
 
 not sure why the database keeps getting closed
