@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"gorm.io/driver/sqlserver"
@@ -28,17 +27,17 @@ type DepartmentEntity struct {
 	Name string
 }
 
-var server = "sqlserver"
-var port = 1433
-var databaseName = "mydb"
-
-func InitDB() {
-	connString := fmt.Sprintf("server=%s;port=%d;database=%s;fedauth=ActiveDirectoryDefault;", server, port, databaseName)
-	db, err := gorm.Open(sqlserver.Open(connString), &gorm.Config{})
+func InitDB() (*sql.DB, error) {
+	log.Println("Connecting to database...")
+	db, err := gorm.Open(sqlserver.Open("sqlserver://sa:yourStrong(!)Password@localhost:1433?database=master"), &gorm.Config{})
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
+	log.Println("Connected to database")
+
+	// Migrate the schemas
+	log.Println("Migrating schemas...")
 	db.AutoMigrate(
 		EmployeeEntity{},
 		DepartmentEntity{},
@@ -51,8 +50,5 @@ func InitDB() {
 
 	defer dbCtx.Close()
 	Db = dbCtx
-}
-
-func CloseDB() error {
-	return Db.Close()
+	return dbCtx, nil
 }

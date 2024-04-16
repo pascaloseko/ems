@@ -14,7 +14,7 @@ type contextKey struct {
 	name string
 }
 
-func Middleware() func(http.Handler) http.Handler {
+func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
@@ -33,9 +33,8 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-	
 			user := employees.Employee{Username: username}
-			id, err := employees.GetEmployeeIdByUsername(username)
+			id, err := emp.GetEmployeeIdByUsername(r.Context(), username)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
@@ -53,7 +52,6 @@ func Middleware() func(http.Handler) http.Handler {
 	}
 
 }
-
 
 // ForContext finds the user from the context. REQUIRES Middleware to have run.
 func ForContext(ctx context.Context) *employees.Employee {

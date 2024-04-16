@@ -1,21 +1,12 @@
 version: '3.7'
 
 services:
-  app:
-    build:
-      context: .
-    depends_on:
-      - sqledge
-    expose:
-      - 8080
-    ports:
-      - 8080:8080
   sqledge:
     image: mcr.microsoft.com/azure-sql-edge
     cap_add:
       - SYS_PTRACE
     environment:
       - ACCEPT_EULA=1
-      - MSSQL_SA_PASSWORD=password
-    ports:
-      - "1433:1433"
+      - MSSQL_SA_PASSWORD=yourStrong(!)Password
+      - MSSQL_SA_USERNAME=username
+    network_mode: "host"
