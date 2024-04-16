@@ -33,6 +33,11 @@ func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if credentials.Username == "" || credentials.Password == "" {
+		http.Error(w, "Password or Username cannot be empty", http.StatusBadRequest)
+		return
+	}
+
 	newEmployee := model.NewEmployee{
 		FirstName: credentials.FirstName,
 		LastName:  credentials.LastName,

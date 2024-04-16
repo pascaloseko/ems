@@ -17,6 +17,7 @@ type Store interface {
 	Save(ctx context.Context, emp Employee) (int64, error)
 	Authenticate(ctx context.Context, emp Employee) bool
 	SaveDepartment(ctx context.Context, dept Department) (int64, error)
+	HashPassword(password string) string
 }
 
 type EmployeeStore struct {
@@ -31,26 +32,31 @@ func NewEmployeeStore(db *sql.DB) Store {
 
 // SaveDepartment implements Store.
 func (e *EmployeeStore) SaveDepartment(ctx context.Context, d Department) (int64, error) {
-	stmt, err := e.store.PrepareContext(ctx, "INSERT INTO Department(Name) VALUES(?)")
+	tsql := `
+	INSERT INTO Department_Entities(Name) VALUES(@Name);
+	SELECT ID = convert(bigint, SCOPE_IDENTITY());
+	`
+	stmt, err := e.store.Prepare(tsql)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	res, err := stmt.ExecContext(ctx, d.Name)
+	row := stmt.QueryRowContext(ctx, sql.Named("Name", d.Name))
 	if err != nil {
 		return 0, err
 	}
-	id, err := res.LastInsertId()
+	var newID int64
+	err = row.Scan(&newID)
 	if err != nil {
 		return 0, err
 	}
 	log.Print("Row inserted!")
-	return id, nil
+	return newID, nil
 }
 
 // Authenticate implements Store.
 func (e *EmployeeStore) Authenticate(ctx context.Context, user Employee) bool {
-	row := e.store.QueryRowContext(ctx, "SELECT Password FROM Employees WHERE Username = ?", user.Username)
+	row := e.store.QueryRowContext(ctx, "SELECT Password FROM Employee_Entities WHERE Username = @Username", sql.Named("Username", user.Username))
 	var hashedPassword string
 	err := row.Scan(&hashedPassword)
 	if err != nil {
@@ -84,7 +90,10 @@ func (e *EmployeeStore) GetAllEmployees(ctx context.Context) ([]Employee, error)
 
 // GetDepartmentIdByName implements Store.
 func (e *EmployeeStore) GetDepartmentIdByName(ctx context.Context, name string) (int64, error) {
-	row := e.store.QueryRowContext(ctx, "SELECT ID FROM Department WHERE Name = ?", name)
+	tsql := `
+	SELECT ID FROM Department_Entities WHERE Name = @Name;
+	`
+	row := e.store.QueryRowContext(ctx, tsql, sql.Named("Name", name))
 	var id int64
 	err := row.Scan(&id)
 	if err != nil {
@@ -114,7 +123,7 @@ func (e *EmployeeStore) GetDepartmentNameById(ctx context.Context, id int64) (st
 
 // GetEmployeeIdByUsername implements Store.
 func (e *EmployeeStore) GetEmployeeIdByUsername(ctx context.Context, username string) (int64, error) {
-	row := e.store.QueryRowContext(ctx, "SELECT ID FROM Employees WHERE Username = ?", username)
+	row := e.store.QueryRowContext(ctx, "SELECT ID FROM Employee_Entities WHERE Username = @Username", sql.Named("Username", username))
 	var id int64
 	err := row.Scan(&id)
 	if err != nil {
@@ -131,7 +140,7 @@ func (e *EmployeeStore) GetEmployeeIdByUsername(ctx context.Context, username st
 func (e *EmployeeStore) Save(ctx context.Context, emp Employee) (int64, error) {
 	// if there is no department with the name provided go ahead and create the department
 	departmentID, err := e.GetDepartmentIdByName(ctx, emp.DepartmentName)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		departmentName := Department{Name: emp.DepartmentName}
 		departmentID, err = e.SaveDepartment(ctx, departmentName)
 		if err != nil {
@@ -142,8 +151,9 @@ func (e *EmployeeStore) Save(ctx context.Context, emp Employee) (int64, error) {
 	}
 
 	tsql := `
-	INSERT INTO EmployeesSchema.Employees(FirstName,LastName, Username, Password, Email, DOB, DepartmentID, Position) 
-	VALUES(@FirstName,@LastName,@Username,@Password,@Email,@DOB,@DepartmentID,@Position)
+	INSERT INTO Employee_Entities (First_Name, Last_Name, Username, Password, Email, DOB, Department_Id, Position)
+	VALUES (@First_Name, @Last_Name, @Username, @Password, @Email, @DOB, @Department_Id, @Position);
+	SELECT ID = convert(bigint, SCOPE_IDENTITY());
 	`
 
 	stmt, err := e.store.Prepare(tsql)
@@ -151,22 +161,35 @@ func (e *EmployeeStore) Save(ctx context.Context, emp Employee) (int64, error) {
 		return 0, err
 	}
 	defer stmt.Close()
-	res, err := stmt.ExecContext(ctx, emp.FirstName, emp.LastName, emp.Username, emp.Password, emp.Email, emp.DOB, departmentID, emp.Position)
+	row := stmt.QueryRowContext(
+		ctx,
+		sql.Named("First_Name", emp.FirstName),
+		sql.Named("Last_Name", emp.LastName),
+		sql.Named("Username", emp.Username),
+		sql.Named("Password", emp.Password),
+		sql.Named("Email", emp.Email),
+		sql.Named("DOB", emp.DOB),
+		sql.Named("Department_Id", departmentID),
+		sql.Named("Position", emp.Position))
 	if err != nil {
 		return 0, err
 	}
-	id, err := res.LastInsertId()
+	var newID int64
+	err = row.Scan(&newID)
 	if err != nil {
 		return 0, err
 	}
 	log.Print("Row inserted!")
-	return id, nil
+	return newID, nil
 }
 
 // HashPassword hashes given password
-func HashPassword(password string) (string, error) {
+func (e *EmployeeStore) HashPassword(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(bytes)
 }
 
 // CheckPassword hash compares raw password with it's hashed values
