@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"log"
 
@@ -48,7 +49,11 @@ func InitDB() (*sql.DB, error) {
 		log.Panic(err)
 	}
 
-	defer dbCtx.Close()
+	// Ping the database to check if it's alive.
+	if err := dbCtx.PingContext(context.Background()); err != nil {
+		return nil, err
+	}
+
 	Db = dbCtx
 	return dbCtx, nil
 }

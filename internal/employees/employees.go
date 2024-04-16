@@ -129,12 +129,6 @@ func (e *EmployeeStore) GetEmployeeIdByUsername(ctx context.Context, username st
 
 // Save implements Store.
 func (e *EmployeeStore) Save(ctx context.Context, emp Employee) (int64, error) {
-	// Check if database is alive.
-	err := e.store.PingContext(ctx)
-	if err != nil {
-		return -1, err
-	}
-
 	// if there is no department with the name provided go ahead and create the department
 	departmentID, err := e.GetDepartmentIdByName(ctx, emp.DepartmentName)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
