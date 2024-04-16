@@ -44,6 +44,28 @@
     go run server.go
     ```
 
+# Step 3
+- test it using curl the GET employees endpoint
+    ```
+    curl --location --request GET 'http://localhost:8080/employees' \
+    --header 'Authorization: "test"' \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "username": "test",
+        "password": "test"
+    }'
+    ```
+
+- POST login endpoint
+    ```
+    curl --location 'http://localhost:8080/login' \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "username": "test",
+        "password": "test"
+    }'
+    ```
+
 # Database Layer
 - The database is bootstrapped from internal/pkg/db/database/mssql.go by InitDB function
 - there is a connection string and I used gorm to make migrations automatically
