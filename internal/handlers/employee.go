@@ -11,12 +11,12 @@ import (
 )
 
 type Handlers struct {
-	empStore *graph.Resolver
+	resolver *graph.Resolver
 }
 
-func NewHandlers(empStore *graph.Resolver) *Handlers {
+func NewHandlers(resolver *graph.Resolver) *Handlers {
 	return &Handlers{
-		empStore: empStore,
+		resolver: resolver,
 	}
 }
 
@@ -44,7 +44,7 @@ func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Position: credentials.Position,
 	}
 
-	token, err := h.empStore.Mutation().CreateEmployee(r.Context(), newEmployee)
+	token, err := h.resolver.Mutation().CreateEmployee(r.Context(), newEmployee)
 	if err != nil {
 		log.Println("ERROR", err)
 		http.Error(w, "Failed to create employee", http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func (h *Handlers) GetAllEmployeesHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	employees, err := h.empStore.Query().Employees(r.Context())
+	employees, err := h.resolver.Query().Employees(r.Context())
 	if err != nil {
 		if errors.Is(err, graph.ErrAccessDenied) {
 			http.Error(w, "access denied", http.StatusUnauthorized)

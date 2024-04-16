@@ -134,6 +134,8 @@ func (e *EmployeeStore) Save(ctx context.Context, emp Employee) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
+
+	// if there is no department with the name provided go ahead and create the department
 	departmentID, err := e.GetDepartmentIdByName(ctx, emp.DepartmentName)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		departmentName := Department{Name: emp.DepartmentName}
