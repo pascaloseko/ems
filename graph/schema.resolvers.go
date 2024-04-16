@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -15,13 +16,11 @@ import (
 	"github.com/pascaloseko/ems/internal/pkg/jwt"
 )
 
+var ErrAccessDenied = errors.New("access denied")
+
 // CreateEmployee is the resolver for the createEmployee field.
 func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEmployee) (*string, error) {
 	var token = ""
-	user := auth.ForContext(ctx)
-	if user == nil {
-		return nil, fmt.Errorf("access denied")
-	}
 
 	var employee employees.Employee
 	employee.FirstName = input.FirstName
@@ -32,16 +31,16 @@ func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEm
 	employee.Password = input.Password
 	employee.Position = input.Position
 
-	_, err := employee.Save()
+	_, err := r.emp.Save(ctx, employee)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save employee: %w", err)
 	}
 
-	correct := user.Authenticate()
+	correct := r.emp.Authenticate(ctx, employee)
 	if !correct {
 		return &token, &employees.WrongUsernameOrPasswordError{}
 	}
-	token, err = jwt.GenerateToken(user.Username)
+	token, err = jwt.GenerateToken(employee.Username)
 	if err != nil {
 		return &token, err
 	}
@@ -52,7 +51,7 @@ func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEm
 func (r *mutationResolver) RefreshToken(ctx context.Context, input model.RefreshTokenInput) (string, error) {
 	username, err := jwt.ParseToken(input.Token)
 	if err != nil {
-		return "", fmt.Errorf("access denied")
+		return "", ErrAccessDenied
 	}
 	token, err := jwt.GenerateToken(username)
 	if err != nil {
@@ -63,8 +62,12 @@ func (r *mutationResolver) RefreshToken(ctx context.Context, input model.Refresh
 
 // Employees is the resolver for the employees field.
 func (r *queryResolver) Employees(ctx context.Context) ([]*model.Employee, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, ErrAccessDenied
+	}
 	var resultEmployees []*model.Employee
-	employees, err := employees.GetAllEmployees()
+	employees, err := r.emp.GetAllEmployees(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get employees: %w", err)
 	}

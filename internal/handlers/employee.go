@@ -2,14 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 
 	"github.com/pascaloseko/ems/graph"
 	"github.com/pascaloseko/ems/graph/model"
 )
 
+type Handlers struct {
+	empStore *graph.Resolver
+}
+
+func NewHandlers(empStore *graph.Resolver) *Handlers {
+	return &Handlers{
+		empStore: empStore,
+	}
+}
+
 // LoginHandler handles employee authentication
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -22,20 +34,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newEmployee := model.NewEmployee{
-		FirstName:    credentials.FirstName,
-		LastName:     credentials.LastName,
-		Email:        credentials.Email,
-		Username:     credentials.Username,
-		Password:     credentials.Password,
-		Dob:          credentials.Dob,
+		FirstName: credentials.FirstName,
+		LastName:  credentials.LastName,
+		Email:     credentials.Email,
+		Username:  credentials.Username,
+		Password:  credentials.Password,
+		Dob:       credentials.Dob,
 		DepartmentID: credentials.DepartmentID,
-		Position:     credentials.Position,
+		Position: credentials.Position,
 	}
 
-	resolver := graph.Resolver{}
-	token, err := resolver.Mutation().CreateEmployee(r.Context(), newEmployee)
+	token, err := h.empStore.Mutation().CreateEmployee(r.Context(), newEmployee)
 	if err != nil {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		log.Println("ERROR", err)
+		http.Error(w, "Failed to create employee", http.StatusInternalServerError)
 		return
 	}
 
@@ -50,16 +62,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetEmployees handles employees
-func GetAllEmployeesHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GetAllEmployeesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	resolver := graph.Resolver{}
-	employees, err := resolver.Query().Employees(r.Context())
+	employees, err := h.empStore.Query().Employees(r.Context())
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if errors.Is(err, graph.ErrAccessDenied) {
+			http.Error(w, "access denied", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "Error fetching employees", http.StatusInternalServerError)
+		return
+	}
+
+	if employees == nil {
+		http.Error(w, "No employees found", http.StatusNotFound)
 		return
 	}
 
