@@ -32,13 +32,14 @@
 
 ## How to run the APP
  # Step 1:
-    - run the sql database
+- run the sql database
+
     ```
     docker-compose up -d
     ```
 
 # Step 2
-    - run the app
+- run the app
     ```
     go run server.go
     ```
@@ -58,7 +59,7 @@
 - if non authorized a status code of 401/403 will be thrown from the middleware in internal/auth/middleware.go
 
 # Problems
-- There is an underlying issue when testin the app using postman/curl
+- There is an underlying issue when testing the app using postman/curl
 
 ```
 curl --location 'http://localhost:8080/login' \
@@ -76,3 +77,15 @@ the above throws a 500 with the below log
 
 not sure why the database keeps getting closed
 
+## NOTE
+
+### Known Bugs
+- There are still alot to be done like testing the API and data layers to make sure they are working as expected.
+
+
+- Also the issue of the datbase getting closed when doing API operations needs to be resolved.
+
+- Also I couldn't get the app running on docker, due to a connection problem with the mssql database
+
+
+Those are the 3 main issues that I faced but would have been able to resolve if I had more time on this and also another set of eyes to help me debug.
