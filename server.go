@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/pascaloseko/ems/graph"
 	"github.com/pascaloseko/ems/internal/auth"
+	"github.com/pascaloseko/ems/internal/employees"
 	"github.com/pascaloseko/ems/internal/handlers"
 	"github.com/pascaloseko/ems/internal/pkg/db/database"
 )
@@ -23,18 +24,27 @@ func main() {
 	}
 
 	router := chi.NewRouter()
-	router.Use(auth.Middleware())
-
-	database.InitDB()
-	defer database.CloseDB()
+	db, err := database.InitDB()
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	store := employees.NewEmployeeStore(db)
+	resolver := graph.NewResolver(store)
+	handlers := handlers.NewHandlers(resolver)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/query", srv)
 	router.HandleFunc("/login", handlers.LoginHandler)
-	router.HandleFunc("/employees", handlers.GetAllEmployeesHandler)
+
+	// Protected Route: /employees
+	router.Group(func(r chi.Router) {
+		r.Use(auth.Middleware(store))
+		r.HandleFunc("/employees", handlers.GetAllEmployeesHandler)
+	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
