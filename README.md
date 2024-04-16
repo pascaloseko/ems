@@ -39,7 +39,7 @@
     ```
 
 # Step 2
-- run the app
+- on a separate terminal run the app
     ```
     go run server.go
     ```
