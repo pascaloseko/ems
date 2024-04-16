@@ -28,17 +28,12 @@ func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEm
 	employee.Username = input.Username
 	employee.Email = input.Email
 	employee.DOB = input.Dob
-	employee.Password = input.Password
+	employee.Password = r.emp.HashPassword(input.Password)
 	employee.Position = input.Position
 
 	_, err := r.emp.Save(ctx, employee)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save employee: %w", err)
-	}
-
-	correct := r.emp.Authenticate(ctx, employee)
-	if !correct {
-		return &token, &employees.WrongUsernameOrPasswordError{}
 	}
 	token, err = jwt.GenerateToken(employee.Username)
 	if err != nil {
