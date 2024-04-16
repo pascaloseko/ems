@@ -111,3 +111,7 @@ not sure why the database keeps getting closed
 
 
 Those are the 3 main issues that I faced but would have been able to resolve if I had more time on this and also another set of eyes to help me debug.
+
+## nice to have
+gostatic checker
+ci/cd pipeline
