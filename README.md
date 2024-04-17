@@ -32,19 +32,13 @@
 
 ## How to run the APP
  # Step 1:
-- run the sql database
+- run the app
 
     ```
     docker-compose up -d
     ```
 
 # Step 2
-- on a separate terminal run the app
-    ```
-    go run server.go
-    ```
-
-# Step 3
 - test it using curl the GET employees endpoint
     ```
     curl --location --request GET 'http://localhost:8080/employees' \
@@ -81,7 +75,7 @@
 - if non authorized a status code of 401/403 will be thrown from the middleware in internal/auth/middleware.go
 
 # Problems
-- There is an underlying issue when testing the app using postman/curl
+- There is an underlying issue when testing the app using postman/curl [Update this is resolved!]
 
 ```
 curl --location 'http://localhost:8080/login' \
@@ -101,13 +95,13 @@ not sure why the database keeps getting closed
 
 ## NOTE
 
-### Known Bugs
+### Known Issues
 - There are still alot to be done like testing the API and data layers to make sure they are working as expected.
 
 
 - Also the issue of the datbase getting closed when doing API operations needs to be resolved. [Update this is resolved]
 
-- Also I couldn't get the app running on docker, due to a connection problem with the mssql database
+- Also I couldn't get the app running on docker, due to a connection problem with the mssql database [Update this is resolved]
 
 
 Those are the 3 main issues that I faced but would have been able to resolve if I had more time on this and also another set of eyes to help me debug.
