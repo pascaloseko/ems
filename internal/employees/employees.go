@@ -71,7 +71,10 @@ func (e *EmployeeStore) Authenticate(ctx context.Context, user Employee) bool {
 
 // GetAllEmployees implements Store.
 func (e *EmployeeStore) GetAllEmployees(ctx context.Context) ([]Employee, error) {
-	rows, err := e.store.QueryContext(ctx, "SELECT ID, FirstName, LastName, Username, Email, DOB, DepartmentID, Position FROM Employees")
+	tsql := `
+	SELECT ID, First_Name, Last_Name, Username, Email, DOB, Position FROM Employee_Entities
+	`
+	rows, err := e.store.QueryContext(ctx, tsql)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +82,7 @@ func (e *EmployeeStore) GetAllEmployees(ctx context.Context) ([]Employee, error)
 	var employees []Employee
 	for rows.Next() {
 		var employee Employee
-		err = rows.Scan(&employee.ID, &employee.FirstName, &employee.LastName, &employee.Username, &employee.Email, &employee.DOB, &employee.DepartmentID, &employee.Position)
+		err = rows.Scan(&employee.ID, &employee.FirstName, &employee.LastName, &employee.Username, &employee.Email, &employee.DOB, &employee.Position)
 		if err != nil {
 			return nil, err
 		}

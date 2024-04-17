@@ -49,6 +49,11 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 				return
 			}
 
+			if user.ID == 0 {
+				http.Error(w, "Invalid token", http.StatusForbidden)
+				return
+			}
+
 			user.ID = id
 			// put it in context
 			ctx := context.WithValue(r.Context(), userCtxKey, &user)

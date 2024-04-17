@@ -89,5 +89,4 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 
-
 var ErrAccessDenied = errors.New("access denied")
