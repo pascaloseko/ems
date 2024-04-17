@@ -16,8 +16,6 @@ import (
 	"github.com/pascaloseko/ems/internal/pkg/jwt"
 )
 
-var ErrAccessDenied = errors.New("access denied")
-
 // CreateEmployee is the resolver for the createEmployee field.
 func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEmployee) (*string, error) {
 	var token = ""
@@ -90,3 +88,6 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+
+
+var ErrAccessDenied = errors.New("access denied")

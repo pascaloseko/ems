@@ -1,7 +1,14 @@
 version: '3.7'
 
 services:
-  sqledge:
+  app:
+    build:
+      context: .
+    depends_on:
+      - db
+    network_mode: "host"
+
+  db:
     image: mcr.microsoft.com/azure-sql-edge
     cap_add:
       - SYS_PTRACE

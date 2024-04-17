@@ -30,7 +30,7 @@ type DepartmentEntity struct {
 
 func InitDB() (*sql.DB, error) {
 	log.Println("Connecting to database...")
-	db, err := gorm.Open(sqlserver.Open("sqlserver://sa:yourStrong(!)Password@localhost:1433?database=master"), &gorm.Config{})
+	db, err := gorm.Open(sqlserver.Open("sqlserver://sa:yourStrong(!)Password@127.0.0.1:1433?database=master"), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}

@@ -35,13 +35,13 @@ func main() {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 
-	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	router.Handle("/query", srv)
 	router.HandleFunc("/login", handlers.LoginHandler)
 
 	// Protected Route: /employees
 	router.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(store))
+		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		r.Handle("/query", srv)
 		r.HandleFunc("/employees", handlers.GetAllEmployeesHandler)
 	})
 

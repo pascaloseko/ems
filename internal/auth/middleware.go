@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/pascaloseko/ems/internal/employees"
 	"github.com/pascaloseko/ems/internal/pkg/jwt"
@@ -12,6 +13,14 @@ var userCtxKey = &contextKey{"user"}
 
 type contextKey struct {
 	name string
+}
+
+func splitBearer(header string) string {
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return ""
+	}
+	return parts[1]
 }
 
 func Middleware(emp employees.Store) func(http.Handler) http.Handler {
@@ -26,7 +35,7 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 			}
 
 			//validate jwt token
-			tokenStr := header
+			tokenStr := splitBearer(header)
 			username, err := jwt.ParseToken(tokenStr)
 			if err != nil {
 				http.Error(w, "Invalid token", http.StatusForbidden)
