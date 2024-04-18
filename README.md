@@ -35,7 +35,7 @@
 - run the app
 
     ```
-    docker-compose up -d
+    docker-compose up --build -d
     ```
 
 # Step 2
