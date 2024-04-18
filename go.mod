@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/99designs/gqlgen v0.17.45
 	github.com/go-chi/chi v1.5.5
+	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/sqlserver v1.5.3
@@ -24,6 +25,7 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect

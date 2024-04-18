@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -28,12 +29,6 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 
-			// Allow unauthenticated users in
-			if header == "" {
-				next.ServeHTTP(w, r)
-				return
-			}
-
 			//validate jwt token
 			tokenStr := splitBearer(header)
 			username, err := jwt.ParseToken(tokenStr)
@@ -44,13 +39,9 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 
 			user := employees.Employee{Username: username}
 			id, err := emp.GetEmployeeIdByUsername(r.Context(), username)
-			if err != nil {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			if user.ID == 0 {
-				http.Error(w, "Invalid token", http.StatusForbidden)
+			if err != nil || id == 0 {
+				log.Printf("GetEmployeeIdByUsername: %v", err)
+				http.Error(w, "Invalid token: user not found", http.StatusForbidden)
 				return
 			}
 
