@@ -28,12 +28,6 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 
-			// Allow unauthenticated users in
-			if header == "" {
-				next.ServeHTTP(w, r)
-				return
-			}
-
 			//validate jwt token
 			tokenStr := splitBearer(header)
 			username, err := jwt.ParseToken(tokenStr)
@@ -49,7 +43,7 @@ func Middleware(emp employees.Store) func(http.Handler) http.Handler {
 				return
 			}
 
-			if user.ID == 0 {
+			if id == 0 {
 				http.Error(w, "Invalid token", http.StatusForbidden)
 				return
 			}
